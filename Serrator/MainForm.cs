@@ -5,13 +5,19 @@ using System.IO.Ports;
 public partial class MainForm : Form
 {
     private readonly SerialPort _serialPort = new();
-    private bool _showTimestamp;
+    private readonly FilterOutputForm _filterOutputForm;
+
+    internal string[] Lines { get => GetLines(); set => SetLines(value); }
+    internal List<string> RawLines { get; } = new();
+    internal List<string> RawLinesWithTimestamps { get; } = new();
+    internal bool ShowTimestamp { get; private set; }
 
     public MainForm()
     {
         InitializeComponent();
 
         _serialPort.DataReceived += SerialPortOnDataReceived;
+        _filterOutputForm = new FilterOutputForm(this);
     }
 
     private void InitControls(object sender, EventArgs e)
@@ -68,6 +74,8 @@ public partial class MainForm : Form
     }
 
     private delegate void AppendTextCallback(string text);
+    private delegate void SetLinesCallback(string[] lines);
+    private delegate string[] GetLinesCallback();
 
     private void AppendText(string text)
     {
@@ -77,9 +85,37 @@ public partial class MainForm : Form
             serialOutputTxt.AppendText(text);
     }
 
+    private void SetLines(string[] lines)
+    {
+        if (serialOutputTxt.InvokeRequired)
+            Invoke(new SetLinesCallback(SetLines), new object[] { lines });
+        else
+            serialOutputTxt.Lines = lines;
+    }
+
+    private string[] GetLines()
+    {
+        if (serialOutputTxt.InvokeRequired)
+            return (string[])Invoke(new GetLinesCallback(GetLines));
+
+        return serialOutputTxt.Lines;
+    }
+
     private void SerialPortOnDataReceived(object sender, SerialDataReceivedEventArgs e)
     {
-        AppendText($"{(_showTimestamp ? $"[{DateTime.Now:HH:mm:ss}] " : "")}{((SerialPort)sender).ReadExisting() + Environment.NewLine}");
+        var data = ((SerialPort)sender).ReadExisting();
+        var now = DateTime.Now;
+
+        RawLines.Add(data);
+        RawLinesWithTimestamps.Add($"[{now:HH:mm:ss}] {data}");
+
+        if (!_filterOutputForm.Pattern.IsMatch(data))
+            return;
+
+        var tmp = Lines.ToList();
+        tmp.Add(ShowTimestamp ? $"[{now:HH:mm:ss}] {data}" : data);
+
+        Lines = tmp.ToArray();
     }
 
     private void DisconnectFromPort(object sender, EventArgs e)
@@ -106,7 +142,7 @@ public partial class MainForm : Form
     {
         var data = dataTxt.Text ?? string.Empty;
         var format = $"{data} <{Environment.NewLine}";
-        var offset = serialOutputTxt.Lines.Sum(x => x.Length + Environment.NewLine.Length);
+        var offset = Lines.Sum(x => x.Length + Environment.NewLine.Length);
 
         _serialPort.Write(data);
 
@@ -122,22 +158,10 @@ public partial class MainForm : Form
 
     private void ToggleTimestamp(object sender, EventArgs e)
     {
-        _showTimestamp = !_showTimestamp;
+        ShowTimestamp = !ShowTimestamp;
+        var lines = ShowTimestamp ? RawLinesWithTimestamps : RawLines;
 
-        var lines = serialOutputTxt.Lines;
-
-        if (_showTimestamp)
-        {
-            for (var i = 0; i < serialOutputTxt.Lines.Length; i++)
-                lines[i] = $"[{DateTime.Now:HH:mm:ss}] {lines[i]}";
-        }
-        else
-        {
-            for (var i = 0; i < serialOutputTxt.Lines.Length; i++)
-                lines[i] = lines[i][11 /* [aa:bb:cc] */..];
-        }
-
-        serialOutputTxt.Lines = lines;
+        Lines = lines.Where(x => _filterOutputForm.Pattern.IsMatch(x)).ToArray();
     }
 
     private void SaveOutput(object sender, EventArgs e)
@@ -149,21 +173,15 @@ public partial class MainForm : Form
             Filter = "Text files|*.txt"
         };
 
-        var result = saveDialog.ShowDialog();
+        var result = saveDialog.ShowDialog(this);
 
         if (result != DialogResult.OK)
             return;
 
-        var lines = serialOutputTxt.Lines;
-        if (_showTimestamp)
-        {
-            for (var i = 0; i < serialOutputTxt.Lines.Length; i++)
-                lines[i] = lines[i][11 /* [aa:bb:cc] */..];
-        }
-
+        var lines = ShowTimestamp ? RawLinesWithTimestamps : RawLines;
         var data = string.Join(Environment.NewLine, lines);
-
         using var sw = new StreamWriter(saveDialog.FileName);
+
         sw.Write(data);
     }
 
@@ -182,5 +200,10 @@ public partial class MainForm : Form
             default:
                 return base.ProcessCmdKey(ref msg, keyData);
         }
+    }
+
+    private void FilterOutput(object sender, EventArgs e)
+    {
+        _filterOutputForm.ShowDialog();
     }
 }

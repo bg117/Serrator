@@ -42,16 +42,14 @@ partial class MainForm
             this.clearSerialOutputBtn = new System.Windows.Forms.Button();
             this.filterOutputBtn = new System.Windows.Forms.Button();
             this.disconnectBtn = new System.Windows.Forms.Button();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.serialOutputTxt = new System.Windows.Forms.RichTextBox();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.label3 = new System.Windows.Forms.Label();
+            this.serialOutputTxt = new System.Windows.Forms.TextBox();
             this.statusStrip1.SuspendLayout();
-            this.panel1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -123,6 +121,7 @@ partial class MainForm
             // dataTxt
             // 
             resources.ApplyResources(this.dataTxt, "dataTxt");
+            this.dataTxt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.dataTxt.Name = "dataTxt";
             // 
             // sendBtn
@@ -144,6 +143,7 @@ partial class MainForm
             resources.ApplyResources(this.filterOutputBtn, "filterOutputBtn");
             this.filterOutputBtn.Name = "filterOutputBtn";
             this.filterOutputBtn.UseVisualStyleBackColor = true;
+            this.filterOutputBtn.Click += new System.EventHandler(this.FilterOutput);
             // 
             // disconnectBtn
             // 
@@ -151,20 +151,6 @@ partial class MainForm
             this.disconnectBtn.Name = "disconnectBtn";
             this.disconnectBtn.UseVisualStyleBackColor = true;
             this.disconnectBtn.Click += new System.EventHandler(this.DisconnectFromPort);
-            // 
-            // panel1
-            // 
-            resources.ApplyResources(this.panel1, "panel1");
-            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel1.Controls.Add(this.serialOutputTxt);
-            this.panel1.Name = "panel1";
-            // 
-            // serialOutputTxt
-            // 
-            this.serialOutputTxt.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            resources.ApplyResources(this.serialOutputTxt, "serialOutputTxt");
-            this.serialOutputTxt.Name = "serialOutputTxt";
-            this.serialOutputTxt.ReadOnly = true;
             // 
             // menuStrip1
             // 
@@ -204,12 +190,19 @@ partial class MainForm
             resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
             // 
+            // serialOutputTxt
+            // 
+            resources.ApplyResources(this.serialOutputTxt, "serialOutputTxt");
+            this.serialOutputTxt.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.serialOutputTxt.Name = "serialOutputTxt";
+            this.serialOutputTxt.ReadOnly = true;
+            // 
             // MainForm
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.serialOutputTxt);
             this.Controls.Add(this.label3);
-            this.Controls.Add(this.panel1);
             this.Controls.Add(this.disconnectBtn);
             this.Controls.Add(this.filterOutputBtn);
             this.Controls.Add(this.clearSerialOutputBtn);
@@ -225,11 +218,11 @@ partial class MainForm
             this.Controls.Add(this.comPortsList);
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainForm";
+            this.ShowIcon = false;
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DeinitControls);
             this.Load += new System.EventHandler(this.InitControls);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
-            this.panel1.ResumeLayout(false);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -252,12 +245,11 @@ partial class MainForm
     private Button clearSerialOutputBtn;
     private Button filterOutputBtn;
     private Button disconnectBtn;
-    private Panel panel1;
-    private RichTextBox serialOutputTxt;
     private MenuStrip menuStrip1;
     private ToolStripMenuItem fileToolStripMenuItem;
     private ToolStripMenuItem exitToolStripMenuItem;
     private ToolStripMenuItem exitToolStripMenuItem1;
     private ToolStripSeparator toolStripSeparator1;
     private Label label3;
+    private TextBox serialOutputTxt;
 }
